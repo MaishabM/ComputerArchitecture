@@ -1,48 +1,86 @@
 .data
-prompt: .asciiz "Enter 3 integers, one at a time:\n"
-result_prompt: .asciiz "The largest number is: "
+       array: .space 400
+       inp: .asciiz "Enter the number of elements: "
+       element: .asciiz "Enter the elements: \n"
+       ifPrime: .asciiz "The prime numbers: "
+       space: .asciiz " "
 .text
 main:
-    # Display prompt for user input
-    li      $v0, 4               # System call code for print_str
-    la      $a0, prompt          # Load the address of the prompt string
-    syscall
+       li $v0,4
+       la $a0,inp
+       syscall
+       
+       li $v0,5
+       syscall
+       move $t0,$v0     # $t0 = n
+       
+       li $v0,4
+       la $a0,element
+       syscall
+       
+       la $t1,array     # array base address $t1
+       li $t2,0         # i = 0
+       
+arrayInput:
+       beq $t2,$t0,Check
+       
+       li $v0,5
+       syscall
+       move $t3,$v0
+       
+       sw $t3,0($t1)
+       
+       addi $t1,$t1,4
+       addi $t2,$t2,1
+       j arrayInput
 
-    # Initialize variables
-    li      $t0, 3              # Number of integers to input
-    li      $t1, 0               # Loop counter
-    li      $t2, 0               # Variable to store the largest number
-
-input_loop:
-    # Ask the user to input an integer
-    li      $v0, 5               # System call code for read_int
-    syscall
-    move    $t3, $v0             # Store the entered integer in $t3
-
-# Compare the entered integer with the current maximu    
-
-bge     $t3, $t2, update_max # If $t3 >= $t2, update the maximum
-
-# If $t3 < $t2, continue to the next iteration
-    j       next_iteration
-
-update_max:
-    # Update the maximum with the entered integer
-    move    $t2, $t3
-
-next_iteration:
-    addi    $t1, $t1, 1           # Increment the loop counter
-    bne     $t1, $t0, input_loop  # If loop counter is not equal to 10, repeat the loop
-
-    # Display the result
-    li      $v0, 4                 # System call code for print_str
-    la      $a0, result_prompt     # Load the address of the result_prompt string
-    syscall
-
-    li      $v0, 1                 # System call code for print_int
-    move    $a0, $t2               # Load the value to print into $a0
-    syscall
-
-    # Exit the program
-    li      $v0, 10                # System call code for program exit
-    syscall
+Check:
+       la $t1,array     # reset array base address $t1
+       li $t2,0         # reset i = 0
+       
+       li $v0,4
+       la $a0,ifPrime
+       syscall
+       
+primeCheck:
+       beq $t2,$t0,Exit
+       
+       lw $t3,0($t1)
+       move $a1,$t3
+       
+       jal LoopCheck
+       
+       addi $t2,$t2,1
+       addi $t1,$t1,4
+       j primeCheck
+       
+Exit:
+       li $v0,10
+       syscall
+       
+LoopCheck:
+       li $t4,2         # initialize to 2 for prime check      
+loop:
+       beq $t4,$a1,Prime
+       
+       div $a1,$t4
+       mfhi $t6
+       
+       beqz $t6,NotPrime
+       
+       addi $t4,$t4,1
+       j loop
+    
+Prime:      
+       li $v0,1
+       move $a0,$a1
+       syscall
+       
+       li $v0,4
+       la $a0,space
+       syscall
+       
+       jr $ra
+       
+NotPrime:
+       jr $ra

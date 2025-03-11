@@ -1,64 +1,76 @@
-#Print even numbers of the array
 .data
-    msg: .asciiz "Enter 10 elements of array\n"
-    array: .space 40
-    comma: .asciiz ", "
-    EvenMsg: .asciiz "Even numbers are: "
+     array: .space 400
+     inp: .asciiz "Enter number of elements: "
+     element: .asciiz "The array elements: \n"
+     out: .asciiz "The even elements are: "
+     space: .asciiz " "
 .text
 main:
-    #initialization
-    li $s2, 2 #set $s2 = 2.
-
-    #print entry message
-    li $v0, 4
-    la $a0, msg
-    syscall
-
-    addi $s0, $zero, 0  #set index to 0
-    
-loop1:
-    beq $s0, 40, print  #if 10 integers are read, go to print
-    
-    li $v0, 5  #take array elements from user
-    syscall
-    move $t1, $v0
-    
-    sw $t1, array($s0) #store word from $t1 in array index $s0
-    addi $s0, $s0, 4   #increment $s0 by 1 index (4 byte)
-    
-    j loop1
-    
+     li $v0,4
+     la $a0,inp
+     syscall
+     
+     li $v0,5
+     syscall
+     move $t0,$v0    # $t0 = n
+     
+     li $t1,2        #set $t1 to 2
+     
+     li $v0,4
+     la $a0,element
+     syscall
+     
+     la $t2,array   #Load base address of array
+     li $t3,0       # i = 0
+     
+Loop:
+     beq $t3,$t0,findEven
+     
+     li $v0,5
+     syscall
+     move $t4,$v0
+     
+     sw $t4,0($t2)
+     
+     addi $t3,$t3,1
+     addi $t2,$t2,4
+     j Loop
+     
+findEven:
+     li $t3,0       #Reset index to 0
+     la $t2,array
+     
+     li $v0,4
+     la $a0,out
+     syscall
+     
+Loop2:
+     beq $t3,$t0,exit
+     
+     lw $t4,0($t2)
+     
+     div $t4,$t1
+     mfhi $t5
+     
+     beqz $t5, print
+     
+     addi $t3,$t3,1
+     addi $t2,$t2,4
+     j Loop2
+     
 print:
-    #print even message
-    li $v0, 4
-    la $a0, EvenMsg
-    syscall
-
-    addi $s0, $zero, 0  #reset $s0 index to 0
-    
-loop2:
-    beq $s0, 40, exit
-    
-    lw $s3, array($s0)  #load word in $s3 from array index $s0
-    addi $s0, $s0, 4
-    
-    div $s3, $s2
-    mfhi $s4 
-    beqz $s4, even
-    j loop2
-
-even:
-    li $v0, 1 #print integer
-    move $a0, $s3
-    syscall
-
-    beq $s0, 40, exit
-    
-    li $v0, 4  #print comma
-    la $a0, comma
-    syscall
-    j loop2
-
+     li $v0,1
+     move $a0,$t4
+     syscall
+     
+     li $v0,4
+     la $a0,space
+     syscall
+     
+     addi $t3,$t3,1
+     addi $t2,$t2,4
+     j Loop2
+     
 exit:
-    li $v0, 10
-    syscall
+     li $v0,10
+     syscall

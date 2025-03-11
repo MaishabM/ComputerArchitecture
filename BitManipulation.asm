@@ -38,7 +38,7 @@ BitShift:
       sw $s0,0($sp)
       
       #Making the mask
-      li $s0,-2
+      li $s0,-1
       sll $s0,$s0,1
       and $t1,$a1,$s0
       

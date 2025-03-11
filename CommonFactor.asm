@@ -23,18 +23,24 @@ main:
      
      #find minimum of two numbers
      move $t2,$t0
-     bge $t1,$t2,Outerloop
+     bge $t1,$t2,Initialize
      move $t2,$t1
      
-Outerloop:
+Initialize:
      li $t3,1   #counter and the common factor
      
      li $v0,4
      la $a0,factor
      syscall
      
+     jal FindFact
+     
+Exit:
+     li $v0,10
+     syscall  
+     
 FindFact:
-     beq $t3,$t2, Exit
+     bgt $t3,$t2, Return
      
      div $t0,$t3
      mfhi $t4
@@ -56,6 +62,5 @@ next:
      addi $t3,$t3,1
      j FindFact
      
-Exit:
-     li $v0,10
-     syscall  
+Return:
+     jr $ra
