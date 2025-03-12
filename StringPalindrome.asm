@@ -29,7 +29,7 @@ findLength:
       
 Compare: 
       addi $t3,$zero,0   # Left index i=0
-      addi $t4,$t0,-1    # Right index j= length-1 (excluding \n)
+      addi $t4,$t0,-1    # Right index j=length-1 (excluding \n)
       
 StringCheck:
       bge $t3,$t4, Palindrome  # If left Index == Right index, palindrome

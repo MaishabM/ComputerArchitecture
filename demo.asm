@@ -1,61 +1,84 @@
 .data
-      string: .space 100     #max 100 space for string
-      inp: .asciiz "Enter the string: "
-      pal: .asciiz "The word is a palindrome"
-      notPal: .asciiz "The word is not a palindrome"
+      array: .space 400
+      inp: .asciiz "Enter the number of elements: "
+      element: .asciiz "Enter the elements: "
+      num: .asciiz "Enter the number to be searched: "
+      ifFound: .asciiz "The number is in position: "
+      ifNotFound: .asciiz "The number is not in the array."
 .text
 main:
       li $v0,4
       la $a0,inp
       syscall
       
-      li $v0,8
-      la $a0,string
-      li $a1,100
+      li $v0,5
       syscall
+      move $t0,$v0
       
-      #check the length of string
-      li $t0,0        # i=0
-      la $t1,string   # Base address of string
-      
-findLength:      
-      lb $t2,0($t1)      # Load the char in $t2
-      
-      beq $t2,10,Compare # If $t2 == \n, break (newline == ASCII 10)
-      
-      addi $t0,$t0,1     #Increment length
-      addi $t1,$t1,1     # Increment address of string
-      j findLength
-      
-Compare: 
-      addi $t3,$zero,0   # Left index i=0
-      addi $t4,$t0,-1    # Right index j= length-1 (excluding \n)
-      
-StringCheck:
-      bge $t3,$t4, Palindrome  # If left Index == Right index, palindrome
-      
-      lb $t5,string($t3) # $t5 = string[i]
-      lb $t6,string($t4) # $t6 = string[j]
-      
-      bne $t5,$t6, NotPalindrome   #If string[i] != string[j],NotPalindrome
-      
-      addi $t3,$t3,1
-      addi $t4,$t4,-1
-      
-      j StringCheck
-      
-Palindrome: 
       li $v0,4
-      la $a0,pal
+      la $a0,element
       syscall
       
-      j Exit
+      li $t1,0     # i = 0
+      la $t2,array # Base address of array
       
-NotPalindrome:
+ArrayInput: 
+      beq $t1,$t0,Search
+      
+      li $v0,5
+      syscall
+      move $t3,$v0
+      
+      sw $t3,0($t2)
+      
+      addi $t1,$t1,1
+      addi $t2,$t2,4
+      j ArrayInput
+      
+Search:
       li $v0,4
-      la $a0,notPal
+      la $a0,num
       syscall
       
-Exit:
+      li $v0,5
+      syscall
+      move $a1,$v0     #The searched num is in $a1
+      
+      li $t1,0
+      la $t2,array
+      
+      jal NumSearch
+      
       li $v0,10
       syscall
+      
+NumSearch:
+      beq $t1,$t0,NotFound
+      
+      lw $t3,0($t2)
+      
+      beq $t3,$a1,found
+      
+      addi $t1,$t1,1
+      addi $t2,$t2,4
+      
+      j NumSearch
+      
+found:
+      li $v0,4
+      la $a0,ifFound
+      syscall
+      
+      addi $t1,$t1,1
+      li $v0,1
+      move $a0,$t1
+      syscall
+      
+      jr $ra
+      
+NotFound:
+      li $v0,4
+      la $a0,ifNotFound
+      syscall
+      
+      jr $ra
