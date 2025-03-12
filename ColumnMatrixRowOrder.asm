@@ -43,7 +43,6 @@ read_matrix:
     li $t1, 0              # Reset index
 
 print_matrix:
-    # Load and print element
     la $t2, matrix         #Base address of matrix
     mul $t3, $t1, 4        #Compute offset (index*4)
     add $t2, $t2, $t3      #Increment address of base address of matrix
@@ -53,18 +52,18 @@ print_matrix:
     syscall
 
     # Print space or newline
-    rem $t4, $t1, $t0      # Check if at row end
-    sub $t5,$t0,1
-    bne $t4, $t5, print_space
+    addi $t4, $t1, 1    #Increment the index by for 1 based index
+    rem $t4, $t4, $t0   # Check the reminder
+    beqz $t4, print_newline  #If 0, then go to newLine
 
     li $v0, 4
-    la $a0, newline
+    la $a0, space
     syscall
     j continue_print
 
-print_space:
+print_newline:
     li $v0, 4
-    la $a0, space
+    la $a0, newline
     syscall
 
 continue_print:
