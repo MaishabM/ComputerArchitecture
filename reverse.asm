@@ -18,7 +18,7 @@ loop:
      
      div $t2,$t2,10
      mfhi $t3
-     mflo $t2
+    # mflo $t2
      
      mul $t1,$t1,10
      add $t1,$t1,$t3
