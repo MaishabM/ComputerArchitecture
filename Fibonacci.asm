@@ -14,7 +14,7 @@ main:
      
      li $t1,0   #First number is 0
      li $t2,1   #Second number is 1
-     li $t3,1   # Index set to 1
+     li $t3,0   # Index set to 1
      
      li $v0,4
      la $a0,out
@@ -39,10 +39,6 @@ loop:
      addi $t3,$t3,1   #Increment index
      j loop
 
-Exit:
-     li $v0,1
-     move $a0,$t1
-     syscall
-    
+Exit:    
      li $v0,10
      syscall

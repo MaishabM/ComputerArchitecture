@@ -1,81 +1,54 @@
-#include<bits/stdc++.h>
+#include <bits/stdc++.h>
 using namespace std;
 
-void addBinary(vector<int>& A, const vector<int>& M) {
-    int carry = 0;
-    for (int i = A.size() - 1; i >= 0; i--) {
-        int sum = A[i] + M[i] + carry;
-        A[i] = sum % 2;
-        carry = sum / 2;
-    }
-}
+const int n = 8; // Bit width
 
-void twoComplement(vector<int>& M) {
-    vector<int> one(M.size(), 0);
-    one.back() = 1;
-    
-    for (int i = 0; i < M.size(); i++) {
-        M[i] = 1 - M[i]; // Bitwise complement
-    }
-    
-    addBinary(M, one); // Add 1 to get two's complement
-}
+void arithmeticRightShift(bitset<n>& A, bitset<n>& Q, int& Q_1) {
+    int new_A_MSB = A[n - 1];
+    Q_1 = Q[0];
 
-void arithmeticRightShift(vector<int>& A, vector<int>& Q, int& Q_1) {
-    Q_1 = Q.back();
-    for (int i = Q.size() - 1; i > 0; i--) {
-        Q[i] = Q[i - 1];
-    }
-    Q[0] = A.back();
-    
-    for (int i = A.size() - 1; i > 0; i--) {
-        A[i] = A[i - 1];
-    }
+    // Shift Q right
+    for (int i = 0; i < n - 1; i++) Q[i] = Q[i + 1];
+    Q[n - 1] = A[0];
+
+    // Shift A right
+    for (int i = 0; i < n - 1; i++) A[i] = A[i + 1];
+    A[n - 1] = new_A_MSB;
 }
 
 void boothMultiplication(int multiplicand, int multiplier) {
-    const int n = 8; // Assume 8-bit multiplication
-    vector<int> M(n, 0), Q(n, 0), A(n, 0);
+    bitset<n> M = bitset<n>(multiplicand);
+    bitset<n> Q = bitset<n>(multiplier);
+    bitset<n> A;
+    bitset<n> M_neg = bitset<n>(-multiplicand);
     int Q_1 = 0;
 
-    // Convert to binary
-    for (int i = n - 1, num = multiplicand; num && i >= 0; i--, num /= 2)
-        M[i] = num % 2;
-    
-    for (int i = n - 1, num = multiplier; num && i >= 0; i--, num /= 2)
-        Q[i] = num % 2;
-    
-    vector<int> M_neg = M;
-    twoComplement(M_neg);
+    cout << "Initial State:\n";
+    cout << "A: " << A << " Q: " << Q << " Q-1: " << Q_1 << endl;
 
-    cout << "Initial values:\n";
-    cout << "A: ";
-    for (int bit : A) cout << bit;
-    cout << " | Q: ";
-    for (int bit : Q) cout << bit;
-    cout << " | Q-1: " << Q_1 << endl;
-
-    for (int count = 0; count < n; count++) {
-        int Q0 = Q.back();
-        if (Q0 == 1 && Q_1 == 0)
-            addBinary(A, M_neg); // A = A - M
-        else if (Q0 == 0 && Q_1 == 1)
-            addBinary(A, M); // A = A + M
+    for (int step = 0; step < n; step++) {
+        int Q0 = Q[0];
+        if (Q0 == 1 && Q_1 == 0) {
+            A = bitset<n>( (int)(bitset<n>(A).to_ulong()) + (int)(bitset<n>(M_neg).to_ulong()) );
+        } else if (Q0 == 0 && Q_1 == 1) {
+            A = bitset<n>( (int)(bitset<n>(A).to_ulong()) + (int)(bitset<n>(M).to_ulong()) );
+        }
 
         arithmeticRightShift(A, Q, Q_1);
 
-        cout << "Step " << count + 1 << ":\n";
-        cout << "A: ";
-        for (int bit : A) cout << bit;
-        cout << " | Q: ";
-        for (int bit : Q) cout << bit;
-        cout << " | Q-1: " << Q_1 << endl;
+        cout << "Step " << step + 1 << ":\n";
+        cout << "A: " << A << " Q: " << Q << " Q-1: " << Q_1 << endl;
     }
 
-    cout << "\nFinal Product: ";
-    for (int bit : A) cout << bit;
-    for (int bit : Q) cout << bit;
-    cout << endl;
+    // Combine A and Q for final result
+    bitset<2 * n> product;
+    for (int i = 0; i < n; i++) {
+        product[i] = Q[i];
+        product[i + n] = A[i];
+    }
+
+    cout << "\nFinal Product (binary): " << product << endl;
+    cout << "Final Product (decimal): " << (int16_t)(product.to_ulong()) << endl; //int16_t for signed 16-bit value
 }
 
 int main() {

@@ -11,7 +11,7 @@ main:
       syscall
       move $a1,$v0
       
-      jal PrintNumber
+    #  jal PrintNumber
       
       jal BitShift
       

@@ -1,112 +1,92 @@
 .data
-    prompt_size: .asciiz "Enter array size: "
-    prompt_element: .asciiz "Enter element: "
-    result_msg: .asciiz "Element-Frequency\n"
-    space: .asciiz " "
+    array: .space 400
+    inp: .asciiz "Enter number of elements: "
+    elmnt: .asciiz "Enter the element: "
+    out: .asciiz "Element Frequency\n"
+    space: .asciiz "        "
     newline: .asciiz "\n"
-    array: .space 400  # Space for array (max 100 elements)
-
 .text
-.globl main
-
 main:
-    # Prompt for array size
-    li $v0, 4
-    la $a0, prompt_size
+    li $v0,4
+    la $a0,inp
     syscall
-
-    # Read array size
-    li $v0, 5
+    
+    li $v0,5
     syscall
-    move $t0, $v0  # Store size in $t0
-
-    # Read array elements
-    li $t1, 0  # i = 0
-read_array:
-    # Prompt for element
-    li $v0, 4
-    la $a0, prompt_element
+    move $s0,$v0   #n
+    
+    li $t0,0       # index i
+    la $t1,array   #base pointer of array
+InpLoop:
+    li $v0,4
+    la $a0,elmnt
     syscall
-
-    # Read element
-    li $v0, 5
+    
+    li $v0,5
     syscall
+    sw $v0,0($t1)
+    
+    addi $t0,$t0,1
+    addi $t1,$t1,4
+    blt $t0,$s0,InpLoop
 
-    # Store in array
-    la $t2, array         # Base address
-    mul $t3, $t1, 4       # Offset = i * 4
-    add $t2, $t2, $t3
-    sw $v0, 0($t2)        # Store element
-
-    addi $t1, $t1, 1      # i++
-    blt $t1, $t0, read_array  # If i < n, repeat
-
-    # Print header
-    li $v0, 4
-    la $a0, result_msg
+    li $v0,4
+    la $a0,out    #Output print
     syscall
+    
+    li $t0,0      #reset index i=0
+    la $t1,array  #reset array base pointer $t1 
+    
+CountLoop:
+    beq $s0,$t0,Exit
+    
+    lw $t2,0($t1) #$t2 = current element array[i]
+    li $t3,1      #frequency counter $t3
+    
+    blt $t2,0,Skip
+    addi $t4,$t0,1    #j = i+1
 
-    # Count frequencies
-    li $t1, 0  # i = 0 (outer loop)
-count_freq:
-    beq $t1, $t0, exit  # If i == size, exit
-
-    # Load array[i]
-    la $t2, array
-    mul $t3, $t1, 4
-    add $t2, $t2, $t3
-    lw $t4, 0($t2)  # $t4 = array[i]
-
-    li $t5, 1  # Frequency counter
-
-    # Check if element is already counted (-1 means counted)
-    blt $t4, 0, next_element
-
-    # Inner loop to count occurrences of array[i]
-    move $t6, $t1  # Copy i to j (inner loop index)
-count_inner:
-    addi $t6, $t6, 1
-    beq $t6, $t0, print_result  # If j == size, print count
-
-    la $t7, array
-    mul $t8, $t6, 4
-    add $t7, $t7, $t8
-    lw $t9, 0($t7)  # Load array[j]
-
-    bne $t9, $t4, count_inner  # If array[j] != array[i], continue
-
-    addi $t5, $t5, 1  # Increase count
-
-    li $s0, -1       # Store -1 in $s0 (fix for invalid operand issue)
-    sw $s0, 0($t7)   # Mark counted element as -1
-
-    j count_inner
-
-print_result:
-    # Print element
-    li $v0, 1
-    move $a0, $t4
+InnerLoop:
+    beq $t4,$s0,Print
+    
+    mul $t5,$t4,4     #$t5 = j*4
+    la $t6,array      #base of array[j]
+    add $t6,$t6,$t5   #$t6 = base + offset (base+j*4)
+    
+    lw $t7,0($t6)     #array[j]
+    beq $t7,$t2,Mark  #if array[i]=array[j],mark
+    
+Next:
+    addi $t4,$t4,1   #increment j
+    j InnerLoop
+    
+Mark:
+    li $s1,-1
+    sw $s1,0($t6)    #store -1 in array[j] if array[j]=array[i]
+    addi $t3,$t3,1   #counter $t3++
+    j Next
+    
+Print:
+    li $v0,1
+    move $a0,$t2
     syscall
-
-    # Print space
-    li $v0, 4
-    la $a0, space
+    
+    li $v0,4
+    la $a0,space
     syscall
-
-    # Print frequency
-    li $v0, 1
-    move $a0, $t5
+    
+    li $v0,1
+    move $a0,$t3
     syscall
-
-    # Print newline
-    li $v0, 4
-    la $a0, newline
+    
+    li $v0,4
+    la $a0,newline
     syscall
-
-next_element:
-    addi $t1, $t1, 1
-    j count_freq
-
-exit:
-    li $v0, 10
+    
+Skip:
+    addi $t0,$t0,1
+    addi $t1,$t1,4
+    j CountLoop
+Exit:
+    li $v0,10
     syscall

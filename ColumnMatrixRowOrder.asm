@@ -1,75 +1,107 @@
 .data
-    matrix: .space 400       # Allocate space for matrix (max 10x10)
-    prompt: .asciiz "Enter matrix size (n x n): "
-    promptElement: .asciiz "Enter element: "
-    newline: .asciiz "\n"
+    array: .space 400
+    inp: .asciiz "Enter n for (n x n): "
+    column: .asciiz "Enter data of column: "
+    out: .asciiz "The matrix: \n"
     space: .asciiz " "
+    newline: .asciiz "\n"
 
 .text
-.globl main
-
 main:
-    # Prompt and read matrix size (n)
     li $v0, 4
-    la $a0, prompt
+    la $a0, inp
     syscall
 
     li $v0, 5
     syscall
-    move $t0, $v0          # Store n in $t0
-    move $s0,$t0           #Copy n to $s0
+    move $s0, $v0         # s0 = n
 
-    # Read matrix in column-major order
-    li $t1, 0              # Index in 1D array
-    mul $s0,$s0,$s0        #Number of inputs will be n*n
+    li $t0, 0             # column index j = 0
 
-read_matrix:
-    li $v0, 4
-    la $a0, promptElement
+InputLoopCol:
+    beq $t0, $s0, Print   # if j = n, print
+    
+    li $v0,4
+    la $a0,column
     syscall
+    
+    addi $s1,$t0,1
+    li $v0,1
+    move $a0,$s1
+    syscall
+    
+    li $v0,4
+    la $a0,newline
+    syscall
+
+    li $t1, 0             # row index i = 0
+
+InputLoopRow:
+    beq $t1, $s0, NextCol
 
     li $v0, 5
     syscall
+    move $t2, $v0
 
-    la $t2, matrix         # Base address
-    mul $t3, $t1, 4        # Compute offset (index * 4)
-    add $t2, $t2, $t3      # Increment 4 byte to base address $t2
-    sw $v0, 0($t2)         # Store element
+    # address = base + 4 * (row * n + column)
+    mul $t3, $t1, $s0     # t3 = i * n
+    add $t3, $t3, $t0     # t3 = i * n + j
+    mul $t3, $t3, 4       # t3 * 4
+    la $t4, array         # base pointer of array
+    add $t4, $t4, $t3     # base + 4 * (i * n + j)
 
-    addi $t1, $t1, 1       # Move to next index
-    blt $t1, $s0, read_matrix  # Repeat until all elements are read
+    sw $t2, 0($t4)
 
-    # Print matrix in row-major order
-    li $t1, 0              # Reset index
+    addi $t1, $t1, 1      # i++ (Row++)
+    j InputLoopRow
 
-print_matrix:
-    la $t2, matrix         #Base address of matrix
-    mul $t3, $t1, 4        #Compute offset (index*4)
-    add $t2, $t2, $t3      #Increment address of base address of matrix
-    lw $a0, 0($t2)
+NextCol:
+    addi $t0, $t0, 1      # j++ (Column++)
+    j InputLoopCol
+
+Print:
+    li $v0, 4
+    la $a0, out
+    syscall
+
+    li $t0, 0             # i = 0 (row index)
+    
+PrintRow:
+    beq $t0, $s0, Exit
+    
+    li $t1, 0             # j = 0 (column index)
+    
+PrintCol:
+    beq $t1, $s0, NewLine
+
+    # Compute address = base + 4 * (row * n + column)
+    mul $t2, $t0, $s0
+    add $t2, $t2, $t1
+    mul $t2, $t2, 4
+    la $t3, array
+    add $t3, $t3, $t2
+
+    lw $t4, 0($t3)
 
     li $v0, 1
+    move $a0, $t4
     syscall
-
-    # Print space or newline
-    addi $t4, $t1, 1    #Increment the index by for 1 based index
-    rem $t4, $t4, $t0   # Check the reminder
-    beqz $t4, print_newline  #If 0, then go to newLine
 
     li $v0, 4
     la $a0, space
     syscall
-    j continue_print
 
-print_newline:
+    addi $t1, $t1, 1      # j++ (column++)
+    j PrintCol
+
+NewLine:
     li $v0, 4
     la $a0, newline
     syscall
 
-continue_print:
-    addi $t1, $t1, 1
-    blt $t1, $s0, print_matrix  # Loop until all elements are printed
+    addi $t0, $t0, 1      # i++ (row++)
+    j PrintRow
 
-    # Exit program
+Exit:
     li $v0, 10
     syscall

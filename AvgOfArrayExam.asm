@@ -1,86 +1,61 @@
 .data
-   # .align 2               # Align the data for proper memory access
-    array:      .space 400  # Allocate space for 100 floats (4 bytes each)
-    zero:       .float 0.0
-    input_msg:  .asciiz "Enter the number of elements: "
-    num_msg:    .asciiz "Enter numbers:\n"
-    avg_msg:    .asciiz "The average is: "
-    newline:    .asciiz "\n"
+    array: .space 400
+    zero: .float 0.0
+    inp: .asciiz "Enter n: "
+    elmnt: .asciiz "Enter elements: "
+    sum: .asciiz "\nThe sum of elements: "
+    avg: .asciiz "\nThe avg of elements: "
 
 .text
 main:
-    # Prompt for N
     li $v0, 4
-    la $a0, input_msg
+    la $a0, inp
     syscall
 
-    # Read N (integer)
-    li $v0, 5
+    li $v0, 5         # n
     syscall
-    move $s0, $v0  # Store N in $s0
+    move $s0, $v0     # $s0 = n
 
-    # Initialize loop counter and base address for array
-    li $t0, 0       # Loop counter
-    la $t1, array   # Base address of array
-
-    # Prompt user for numbers
     li $v0, 4
-    la $a0, num_msg
+    la $a0, elmnt
     syscall
 
-input_loop:
-    beq $t0, $s0, sum_loop  # If counter == N, stop input
+    li $t0, 0         # i = 0
+    la $t1, array     # base address
+    l.s $f2, zero    # initialize sum = 0.0
 
-    # Read float input
+Loop:
+    beq $t0, $s0, Print
+
     li $v0, 6
     syscall
+    s.s $f0, 0($t1)   # store from $f0 to array
+    add.s $f2, $f2, $f0
 
-    # Store the input float in the array
-    s.s $f0, 0($t1)  # Store input at array[t0]
+    addi $t0, $t0, 1
+    addi $t1, $t1, 4
+    j Loop
 
-    # Move to next element
-    addi $t1, $t1, 4  # Increment address by 4 bytes
-    addi $t0, $t0, 1  # Increment counter
-    j input_loop
-
-# Sum the elements in the array
-sum_loop:
-    li $t0, 0        # Reset loop counter
-    la $t1, array    # Reset base address
-    l.s $f2, zero    # sum = 0.0
-
-sum_elements:
-    beq $t0, $s0, compute_avg  # If counter == N, stop summing
-
-    l.s $f1, 0($t1)  # Load array[t1] into $f1
-    add.s $f2, $f2, $f1  # sum += array[t0]
-
-    addi $t1, $t1, 4  # Move to next element
-    addi $t0, $t0, 1  # Increment counter
-    j sum_elements
-
-compute_avg:
-    # Convert N to float
-    mtc1 $s0, $f1       # Move N into floating-point register
-    cvt.s.w $f1, $f1    # Convert integer N to float
-
-    # Compute average: sum / N
-    div.s $f12, $f2, $f1  # f12 = sum / N
-
-    # Print result message
+Print:
     li $v0, 4
-    la $a0, avg_msg
+    la $a0, sum
     syscall
 
-    # Print average (float)
     li $v0, 2
+    mov.s $f12, $f2
     syscall
 
-    # Print newline
     li $v0, 4
-    la $a0, newline
+    la $a0, avg
     syscall
 
-    # Exit program
+    mtc1 $s0, $f4
+    cvt.s.w $f4, $f4     # convert int n to float
+    div.s $f6, $f2, $f4  # f6 = sum / n
+
+    li $v0, 2
+    mov.s $f12, $f6
+    syscall
+
     li $v0, 10
     syscall

@@ -13,26 +13,22 @@ main:
      move $t2,$t0 #Copy of original number
      
      li $t1,0  #Reversed number store
-loop:
-     beqz $t2,Print
      
-     div $t2,$t2,10
-     mfhi $t3
-    # mflo $t2
-     
-     mul $t1,$t1,10
-     add $t1,$t1,$t3
-     
-     j loop
-     
-Print:
      li $v0,4
      la $a0,out
      syscall
+loop:
+     beqz $t2,Exit
      
+     div $t2,$t2,10
+     mfhi $t3
+    
      li $v0,1
-     move $a0,$t1
+     move $a0,$t3
      syscall
      
+     j loop
+     
+Exit:  
      li $v0,10
      syscall

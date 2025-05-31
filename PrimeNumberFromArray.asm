@@ -61,7 +61,8 @@ Exit:
 LoopCheck:
        li $t4,2         # initialize to 2 for prime check      
 loop:
-       beq $t4,$a1,Prime
+       mul $s1,$t4,$t4
+       bgt $s1,$a1,Prime
        
        div $a1,$t4
        mfhi $t6
