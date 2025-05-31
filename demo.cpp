@@ -1,69 +1,88 @@
-#include <iostream>
-#include <bitset>
+#include<bits/stdc++.h>
 using namespace std;
+const int n=4;
 
-const int n = 8; // Bit-width for binary representation
-
-// Function to convert signed int to n-bit two's complement bitset
 bitset<n> toBitset(int num) {
-    if (num >= 0) return bitset<n>(num);
-    return bitset<n>((1 << n) + num); // Two's complement
+    if(num>=0)
+        return bitset<n>(num);
+
+    return bitset<n>((1<<n) + num);
 }
 
-// Function to convert n-bit two's complement bitset to signed int
-int toSigned(const bitset<n>& bits) {
-    if (bits[n - 1] == 0) return bits.to_ulong(); // Positive
-    return bits.to_ulong() - (1 << n);            // Negative
+int toSigned(const bitset<n> &num) {
+    if(num[n-1]==0)
+        return num.to_ulong();
+
+    return num.to_ulong() - (1<<n);
 }
 
-void sequentialMultiplication(int multiplicand, int multiplier) {
-    bitset<n> M = toBitset(multiplicand); // Multiplicand
-    bitset<n> Q = toBitset(multiplier);   // Multiplier
-    bitset<n> A;                          // Accumulator initialized to 0
+void ASR(bitset<n> &A, bitset<n> &Q, int &LSB){
+    LSB = Q[0];
+    int A_msb = A[n-1];
 
-    cout << "Initial State: ";
-    cout << "M: " << M << " Q: " << Q << " A: " << A << "\n\n";
+    for(int i=0; i<n-1; i++) {
+        Q[i] = Q[i+1];
+    }
+    Q[n-1] = A[0];
 
-    for (int i = 0; i < n; ++i) {
-        if (Q[0] == 1) {
-            // A = A + M
-            int sum = toSigned(A) + toSigned(M);
-            A = toBitset(sum);
-        }
+    for(int i=0; i<n-1; i++) {
+        A[i] = A[i+1];
+    }
+    A[n-1] = A_msb;
+}
 
-        // Right shift [A Q] logically
-        bool A_msb = A[n - 1];
-        bool Q0 = Q[0];
 
-        Q >>= 1;
-        Q[n - 1] = A[0];
+void booth(int multiplier,int multiplicand) {
+    bitset<n> M = toBitset(multiplicand);
+    bitset<n> M_neg = toBitset(-multiplicand);
+    bitset<n> Q = toBitset(multiplier);
+    bitset<n> A;
+    int LSB = 0;
 
-        A >>= 1;
-        A[n - 1] = A_msb;
+    cout << "Initial: ";
+    cout << "A: " << A << " Q: " << Q << " Prev LSB: " << LSB << endl;
 
-        cout << "Step " << i + 1 << ": ";
-        cout << "M: " << M << " Q: " << Q << " A: " << A << "\n\n";
+    for(int i=0; i<n; i++) {
+        int Q0 = Q[0];
+
+        if(Q0==1 && LSB==0)
+            A = toBitset(toSigned(A) + toSigned(M_neg));
+        else if(Q0==0 && LSB==1)
+            A = toBitset(toSigned(A) + toSigned(M));
+
+        cout << "Before ASR: " << "A: " << A << " Q: " << Q << " Prev LSB: " << LSB << endl;
+        ASR(A,Q,LSB);
+        cout << "After ASR: " << "A: " << A << " Q: " << Q << " Prev LSB: " << LSB << endl;
+
+        cout << "\nStep " << i+1 << ": ";
+        cout << "A: " << A << " Q: " << Q << " Prev LSB: " << LSB << endl;
     }
 
-    // Combine A and Q for final result
-    bitset<2 * n> result;
-    for (int i = 0; i < n; ++i) {
-        result[i] = Q[i];
-        result[i + n] = A[i];
+    //Final result
+    bitset<2*n> product;
+    for(int i=0; i<n; i++) {
+        product[i] = Q[i];
+        product[i+n] = A[i];
     }
 
-    int finalProduct = (int16_t)result.to_ulong(); // Cast to signed 16-bit int
-    cout << "Final Binary Result: " << result << "\n";
-    cout << "Final Decimal Result: " << finalProduct << "\n";
+    int result;
+    if(product[2*n-1]==0)
+        result = product.to_ulong();
+    else
+        result = product.to_ulong() - (1 << (2*n));
+
+    cout << "The product in binary: " << product << endl;
+    cout << "The product in decimal: " << result;
+
 }
 
 int main() {
-    int multiplicand, multiplier;
-    cout << "Enter multiplicand: ";
-    cin >> multiplicand;
+    int multiplier,multiplicand;
     cout << "Enter multiplier: ";
     cin >> multiplier;
 
-    sequentialMultiplication(multiplicand, multiplier);
-    return 0;
+    cout << "Enter multiplicand: ";
+    cin >> multiplicand;
+
+    booth(multiplier,multiplicand);
 }

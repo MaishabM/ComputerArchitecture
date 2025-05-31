@@ -1,8 +1,7 @@
-#include <iostream>
-#include <bitset>
+#include <bits/stdc++.h>
 using namespace std;
 
-const int n = 8; // Bit-width for binary representation
+const int n = 4;
 
 // Function to convert signed int to n-bit two's complement bitset
 bitset<n> toBitset(int num) {
