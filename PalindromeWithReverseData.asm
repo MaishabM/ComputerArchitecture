@@ -1,6 +1,6 @@
 .data
-    str: .space 30
-    rev: .space 30
+    str: .space 50
+    rev: .space 50
     inp: .asciiz "Enter a data: "
     revmsg: .asciiz "The reversed data: "
     pal: .asciiz "The number/word is a palindrome\n"
@@ -31,7 +31,7 @@ Compare:
     subi $t4,$t0,1    #right index $t4=$t0-1
 
 StringCheck:
-    beq $t3,$t4,Palindrome
+    bgt $t3,$t4,Palindrome
     
     lb $t5, str($t3)
     lb $t6, str($t4)
