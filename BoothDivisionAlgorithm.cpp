@@ -1,93 +1,82 @@
 #include <bits/stdc++.h>
 using namespace std;
+const int n = 4;
 
-const int BITS = 4; // 4-bit division
-
-// Function to add two 4-bit binary numbers
-bitset<BITS> add(bitset<BITS> A, bitset<BITS> B) {
-    bitset<BITS> sum;
-    bool carry = 0;
-
-    for (int i = 0; i < BITS; i++) {
-        sum[i] = A[i] ^ B[i] ^ carry;
-        carry = (A[i] & B[i]) | (carry & (A[i] ^ B[i]));
-    }
-    return sum;
+bitset<n> toBitset(int num) {
+    if (num > 0)
+        return bitset<n>(num);
+    return bitset<n>((1 << n) + num);
 }
 
-// Function to compute two's complement (negative representation)
-bitset<BITS> twosComplement(bitset<BITS> num) {
-    return add(~num, bitset<BITS>(1)); // Invert and add 1
+int toSigned(const bitset<n>& b) {
+    if (b[n - 1] == 0)
+        return b.to_ulong();
+    return b.to_ulong() - (1 << n);
 }
 
-// Function to perform Booth's Division Algorithm
-void boothDivision(bitset<BITS> dividend, bitset<BITS> divisor) {
-    bitset<BITS> A(0);      // Accumulator (initialized to 0)
-    bitset<BITS> Q = dividend; // Q = Dividend
-    bitset<BITS> M = divisor;  // M = Divisor
-    bitset<BITS> negM = twosComplement(M); // -M (Two's complement of M)
+void rdivision(int dividend, int divisor) {
+    // Store sign of quotient and remainder
+    bool negQuotient = (dividend < 0) ^ (divisor < 0);
+    bool negRemainder = (dividend < 0);
 
-    cout << "\nInitial Values:";
-    cout << "\nA: " << A << "  Q: " << Q << "  M: " << M << "\n";
+    //absolute values
+    dividend = abs(dividend);
+    divisor = abs(divisor);
 
-    for (int i = 0; i < BITS; i++) {
-        // Step 1: Left shift A and Q together
-        bool A_msb = A[BITS - 1]; // Store MSB of A
-        A <<= 1;
-        A[0] = Q[BITS - 1]; // Shift Q's MSB into A's LSB
-        Q <<= 1;
+    bitset<n> Q = toBitset(dividend);
+    bitset<n> M = toBitset(divisor);
+    bitset<n + 1> A;
 
-        cout << "\nStep " << i + 1 << ":";
-        cout << "\nAfter Shift  -  A: " << A << "  Q: " << Q;
+    cout << "Initial: ";
+    cout << "A: " << A << " Q: " << Q << " M: " << M << endl << endl;
 
-        // Step 2: A = A - M (i.e., A = A + (-M))
-        A = add(A, negM);
-        cout << "\nAfter Subtracting M  -  A: " << A;
+    for (int i = 0; i < n; ++i) {
+        // Left shift A and Q
+        A = A << 1;
+        A[0] = Q[n - 1];
+        Q = Q << 1;
 
-        // Step 3: If A is negative, restore A and set Q0 = 0
-        if (A[BITS - 1] == 1) {
-            A = add(A, M); // Restore A (A = A + M)
-            cout << "\nRestored A  -  A: " << A;
+        cout << "Step " << i + 1 << " - After shift: ";
+        cout << "A: " << A << " Q: " << Q << endl;
+
+        // A = A - M
+        int temp = A.to_ulong() - M.to_ulong();
+        A = bitset<n + 1>(temp);
+
+        cout << "Step " << i + 1 << " - After subtraction: ";
+        cout << "A: " << A << " Q: " << Q << endl;
+
+        // If A < 0 → restore A, set Q[0] = 0
+        if (A[n] == 1) {
+            A = bitset<n + 1>(temp + M.to_ulong());  // Restore
             Q[0] = 0;
-        } else {
-            Q[0] = 1; // Set LSB of Q
+        }
+        else {
+            Q[0] = 1;
         }
 
-        cout << "\nUpdated Q  -  Q: " << Q << "\n";
+        cout << "Step " << i + 1 << " - Final: ";
+        cout << "A: " << A << " Q: " << Q << endl << endl;
     }
 
-    // Final quotient and remainder
-    cout << "\nFinal Result:";
-    cout << "\nQuotient (Q): " << Q.to_ulong() << " (" << Q << ")";
-    cout << "\nRemainder (A): " << A.to_ulong() << " (" << A << ")\n";
+    int quotient = Q.to_ulong();
+    int remainder = A.to_ulong();
+
+    if (negQuotient) quotient = -quotient;
+    if (negRemainder) remainder = -remainder;
+
+    cout << "Final Quotient (Binary): " << Q << endl;
+    cout << "Final Quotient (Decimal): " << quotient << endl;
+    cout << "Final Remainder (Binary): " << A << endl;
+    cout << "Final Remainder (Decimal): " << remainder << endl;
 }
 
-// Main function
 int main() {
     int dividend, divisor;
-    
-    // Take input for dividend and divisor (4-bit signed range: -8 to 7)
-    cout << "Enter Dividend (-8 to 7): ";
+    cout << "Enter dividend: ";
     cin >> dividend;
-    cout << "Enter Divisor (-8 to 7): ";
+    cout << "Enter divisor: ";
     cin >> divisor;
 
-    if (dividend < -8 || dividend > 7 || divisor < -8 || divisor > 7) {
-        cout << "Error: Values out of range! Use 4-bit numbers only.\n";
-        return 1;
-    }
-
-    if (divisor == 0) {
-        cout << "Error: Division by zero is not allowed!\n";
-        return 1;
-    }
-
-    // Convert input to 4-bit binary representation
-    bitset<BITS> binDividend(dividend);
-    bitset<BITS> binDivisor(divisor);
-
-    // Perform Booth's Division
-    boothDivision(binDividend, binDivisor);
-
-    return 0;
+    rdivision(dividend, divisor);
 }

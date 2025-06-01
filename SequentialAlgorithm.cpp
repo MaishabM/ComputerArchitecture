@@ -3,66 +3,63 @@ using namespace std;
 
 const int n = 4;
 
-// Function to convert signed int to n-bit two's complement bitset
 bitset<n> toBitset(int num) {
     if (num >= 0) return bitset<n>(num);
-    return bitset<n>((1 << n) + num); // Two's complement
+    return bitset<n>((1 << n) + num);
 }
 
-// Function to convert n-bit two's complement bitset to signed int
-int toSigned(const bitset<n>& bits) {
-    if (bits[n - 1] == 0) return bits.to_ulong(); // Positive
-    return bits.to_ulong() - (1 << n);            // Negative
+int toSigned(bitset<n> bits) {
+    if (bits[n - 1] == 0) return bits.to_ulong();
+    return bits.to_ulong() - (1 << n);
 }
 
-void sequentialMultiplication(int multiplicand, int multiplier) {
-    bitset<n> M = toBitset(multiplicand); // Multiplicand
-    bitset<n> Q = toBitset(multiplier);   // Multiplier
-    bitset<n> A;                          // Accumulator initialized to 0
+void sequential(bitset<n> M, bitset<n> Q) {
+    bitset<n> A;
 
-    cout << "Initial State: ";
-    cout << "M: " << M << " Q: " << Q << " A: " << A << "\n\n";
+    cout << "Initial State:\n";
+    cout << "M: " << M << "  Q: " << Q << "  A: " << A << endl;
 
     for (int i = 0; i < n; ++i) {
-        if (Q[0] == 1) {
-            // A = A + M
-            int sum = toSigned(A) + toSigned(M);
-            A = toBitset(sum);
-        }
+        if (Q[0] == 1)
+            A = toBitset(toSigned(A) + toSigned(M));
 
-        // Right shift [A Q] logically
-        bool A_msb = A[n - 1];
-        bool Q0 = Q[0];
+        int amsb = A[n - 1];
 
+        // Shift Q right and bring A[0] into Q[n-1]
         Q >>= 1;
         Q[n - 1] = A[0];
 
+        // Shift A right and retain its sign bit
         A >>= 1;
-        A[n - 1] = A_msb;
+        A[n - 1] = amsb;
 
         cout << "Step " << i + 1 << ": ";
-        cout << "M: " << M << " Q: " << Q << " A: " << A << "\n\n";
+        cout << "A: " << A << "  Q: " << Q << "\n";
     }
 
-    // Combine A and Q for final result
+    // Combine A and Q for final 8-bit result
     bitset<2 * n> result;
     for (int i = 0; i < n; ++i) {
-        result[i] = Q[i];
-        result[i + n] = A[i];
+        result[i] = Q[i];         // LSB part
+        result[i + n] = A[i];     // MSB part
     }
 
-    int finalProduct = (int16_t)result.to_ulong(); // Cast to signed 16-bit int
-    cout << "Final Binary Result: " << result << "\n";
-    cout << "Final Decimal Result: " << finalProduct << "\n";
+    // Convert 8-bit two's complement to signed integer
+    int finalResult;
+    if(result[2 * n - 1] == 0)
+        finalResult = result.to_ulong();
+    else
+        finalResult = result.to_ulong() - (1 << (2 * n));
+
+    cout << "\nFinal Binary Result: " << result << "\n";
+    cout << "Final Decimal Result: " << finalResult << "\n";
 }
 
 int main() {
-    int multiplicand, multiplier;
-    cout << "Enter multiplicand: ";
-    cin >> multiplicand;
-    cout << "Enter multiplier: ";
-    cin >> multiplier;
-
-    sequentialMultiplication(multiplicand, multiplier);
-    return 0;
+    bitset<n> M, Q;
+    cout << "Enter 4-bit binary multiplicand: ";
+    cin >> M;
+    cout << "Enter 4-bit binary multiplier: ";
+    cin >> Q;
+    sequential(M, Q);
 }

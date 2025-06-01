@@ -19,21 +19,6 @@ int toSigned(const bitset<n>& b) {
     return b.to_ulong() - (1 << n);    // negative
 }
 
-// Perform Arithmetic Shift Right on (A, Q, Q1)
-void ASR(bitset<n> &A, bitset<n> &Q, int &Q1) {
-    int A_msb = A[n - 1];
-    int Q0 = Q[0];
-    Q1 = Q0;
-
-    // Right shift Q
-    for (int i = 0; i < n - 1; i++) Q[i] = Q[i + 1];
-    Q[n - 1] = A[0];
-
-    // Right shift A
-    for (int i = 0; i < n - 1; i++) A[i] = A[i + 1];
-    A[n - 1] = A_msb;
-}
-
 void booth(int multiplier, int multiplicand) {
     bitset<n> M = toBitset(multiplicand);
     bitset<n> M_neg = toBitset(-multiplicand);
@@ -54,7 +39,13 @@ void booth(int multiplier, int multiplicand) {
             A = toBitset(toSigned(A) + toSigned(M));
 
         cout << "Before ASR: " << "A: " << A << " Q: " << Q << " Prev LSB: " << Q1 << endl;
-        ASR(A, Q, Q1);
+        int A_msb = A[n - 1];
+        Q1 = Q[0];
+
+        Q = Q >> 1;
+        Q[n-1] = A[0];
+        A = A >> 1;
+        A[n-1] = A_msb;
         cout << "After ASR: " << "A: " << A << " Q: " << Q << " Prev LSB: " << Q1 << endl;
 
         cout << "\nStep " << i + 1 << ": ";
