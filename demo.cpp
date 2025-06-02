@@ -3,8 +3,8 @@ using namespace std;
 const int n=4;
 
 void restoring(int dd, int ds) {
-    bitset<n> M = bitset<n>(ds);
-    bitset<n> Q = bitset<n>(dd);
+    bitset<n> M = bitset<n>(ds);  // dividend
+    bitset<n> Q = bitset<n>(dd);  // divisor
     bitset<n+1> A;
 
     for(int i=0; i<n; i++) {
